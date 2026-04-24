@@ -188,7 +188,9 @@ draw();
         /* ── Links HTML ── */
         const linksHTML = links.map((link, i) => {
             const color = link.color || sc;
-            const isDiscord = link.url === '#' || link.url === '';
+            const isDiscord = link.icon === 'fab fa-discord';
+            // For Discord: the URL field holds the username to copy
+            const discordNick = isDiscord ? (link.url || link.name) : '';
             const iconContent = link.iconUrl
                 ? `<img src="${esc(link.iconUrl)}" style="width:20px;height:20px;object-fit:contain;">`
                 : `<i class="${esc(link.icon||'fas fa-link')}"></i>`;
@@ -202,7 +204,7 @@ draw();
             const nameContent = cfg.typingEffect ? '' : esc(link.name);
             const descContent = cfg.typingEffect ? '' : esc(link.desc||'');
 
-            return `<a href="${isDiscord ? '#' : esc(link.url)}" ${!isDiscord ? 'target="_blank" rel="noopener"' : ''} class="link link--${esc(cfg.linkStyle||'default')}" style="border-color:${color};border-radius:${linkR}px;animation-delay:${0.6+i*0.1}s;" ${isDiscord ? `data-discord="${esc(link.desc||link.name)}"` : ''}>
+            return `<a href="#" ${!isDiscord ? `onclick="window.open('${esc(link.url)}','_blank');return false;"` : ''} class="link link--${esc(cfg.linkStyle||'default')}" style="border-color:${color};border-radius:${linkR}px;animation-delay:${0.6+i*0.1}s;" ${isDiscord ? `data-discord-nick="${esc(discordNick)}"` : ''}>
                 <div class="link-icon" style="color:${color};border-color:${color};">${iconContent}</div>
                 <div class="link-body"><div class="link-name" ${nameAttr}>${nameContent}</div><div class="link-desc" ${descAttr}>${descContent}</div></div>
                 ${link.badge ? `<span class="badge" style="background:${esc(link.badgeColor||'#00ff00')};color:${esc(link.badgeFontColor||'#000000')};">${esc(link.badge)}</span>` : ''}
@@ -375,7 +377,7 @@ ${hasMusic ? `var music=$('bgMusic');var vr=$('volRange');var vb=$('volBtn');
 function updateVolIcon(){if(!vb||!music)return;var v=music.muted?0:music.volume;if(v===0)vb.innerHTML='<i class="fas fa-volume-mute"></i>';else if(v<0.4)vb.innerHTML='<i class="fas fa-volume-down"></i>';else vb.innerHTML='<i class="fas fa-volume-up"></i>';}
 if(vr&&music)vr.addEventListener('input',function(e){music.volume=e.target.value/100;updateVolIcon();});
 if(vb&&music)vb.addEventListener('click',function(){music.muted=!music.muted;if(vr)vr.value=music.muted?0:music.volume*100;updateVolIcon();});` : ''}
-document.querySelectorAll('.link[data-discord]').forEach(function(el){el.addEventListener('click',function(e){e.preventDefault();var name=el.dataset.discord;navigator.clipboard.writeText(name).then(function(){el.style.opacity='.5';setTimeout(function(){el.style.opacity='1';},600);}).catch(function(){prompt('Copie o username:',name);});});});
+document.querySelectorAll('.link[data-discord-nick]').forEach(function(el){el.addEventListener('click',function(e){e.preventDefault();var nick=el.dataset.discordNick||'';navigator.clipboard.writeText(nick).then(function(){var toast=document.createElement('div');toast.textContent='Nick de usuário copiado: '+nick;toast.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(8,8,24,.95);color:#fff;font-family:monospace;font-size:.82rem;padding:10px 20px;border-radius:8px;border:1px solid #5865F2;box-shadow:0 0 16px #5865F280;z-index:99999;pointer-events:none;animation:toastIn .25s ease;';var style=document.createElement('style');style.textContent='@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(10px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}';document.head.appendChild(style);document.body.appendChild(toast);setTimeout(function(){toast.style.transition='opacity .3s';toast.style.opacity='0';setTimeout(function(){toast.remove();style.remove();},300);},2200);}).catch(function(){prompt('Copie o username do Discord:',nick);});});});
 var sb=$('shareBtn');
 if(sb){sb.addEventListener('click',function(){if(navigator.share){navigator.share({title:'${esc(cfg.username||'Links')}',url:window.location.href}).catch(function(){});}else{navigator.clipboard.writeText(window.location.href).then(function(){sb.innerHTML='<i class="fas fa-check"></i>';setTimeout(function(){sb.innerHTML='<i class="fas fa-share-alt"></i>';},1500);});}});}
 ${beatScript}

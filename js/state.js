@@ -191,6 +191,14 @@ const State = (() => {
 
     function addLink(link)         { _links.push(link); _pushHistory(); _notify('links'); }
     function updateLink(id, patch) { const l = _links.find(l => l.id === id); if (l) Object.assign(l, patch); _pushHistory(); _notify('links'); }
+    function updateLinkSilent(id, patch) {
+        // Updates state + preview WITHOUT re-rendering the links list (safe during text input)
+        const l = _links.find(l => l.id === id);
+        if (!l) return;
+        Object.assign(l, patch);
+        _notify('links-silent');
+    }
+    function commitLinkHistory() { if (_pushHistory()) _notify('history'); }
     function removeLink(id)        { _links = _links.filter(l => l.id !== id); _pushHistory(); _notify('links'); }
     function reorderLinks(arr)     { _links = arr; _pushHistory(); _notify('links'); }
     function moveLinkUp(id)   { const i = _links.findIndex(l => l.id === id); if (i <= 0) return; [_links[i-1], _links[i]] = [_links[i], _links[i-1]]; _pushHistory(); _notify('links'); }
@@ -270,7 +278,7 @@ const State = (() => {
         init, reset, save,
         getConfig, getMedia, getLinks, getFloats,
         setConfig, setConfigLive, setConfigBatch, setConfigBatchLive, commitHistory, setMedia,
-        addLink, updateLink, removeLink, moveLinkUp, moveLinkDown, reorderLinks,
+        addLink, updateLink, updateLinkSilent, commitLinkHistory, removeLink, moveLinkUp, moveLinkDown, reorderLinks,
         addFloat, updateFloat, commitFloat, removeFloat,
         undo, redo, canUndo, canRedo,
         onChange, offChange,

@@ -95,7 +95,7 @@ const LinksManager = (() => {
             <div class="link-item-body">
                 <div class="link-input-row">
                     <i class="fas fa-link" title="URL"></i>
-                    <input type="url" class="link-url-input" value="${escHtml(link.url)}" placeholder="https://...">
+                    <input type="${link.icon === 'fab fa-discord' ? 'text' : 'url'}" class="link-url-input" value="${escHtml(link.url)}" placeholder="${link.icon === 'fab fa-discord' ? 'Username do Discord (ex: usuario#1234)' : 'https://...'}">
                     <button class="copy-url-btn" title="Copiar URL"><i class="fas fa-copy"></i></button>
                 </div>
                 <div class="link-input-row">
@@ -142,9 +142,12 @@ const LinksManager = (() => {
 
         // Basic events
         div.querySelector('.link-color-dot').addEventListener('input', (e) => State.updateLink(link.id, { color: e.target.value }));
-        div.querySelector('.link-title-input').addEventListener('input', (e) => State.updateLink(link.id, { name: e.target.value }));
-        div.querySelector('.link-url-input').addEventListener('input', (e) => State.updateLink(link.id, { url: e.target.value }));
-        div.querySelector('.link-desc-input').addEventListener('input', (e) => State.updateLink(link.id, { desc: e.target.value }));
+        div.querySelector('.link-title-input').addEventListener('input', (e) => State.updateLinkSilent(link.id, { name: e.target.value }));
+        div.querySelector('.link-title-input').addEventListener('change', (e) => State.commitLinkHistory());
+        div.querySelector('.link-url-input').addEventListener('input', (e) => State.updateLinkSilent(link.id, { url: e.target.value }));
+        div.querySelector('.link-url-input').addEventListener('change', (e) => State.commitLinkHistory());
+        div.querySelector('.link-desc-input').addEventListener('input', (e) => State.updateLinkSilent(link.id, { desc: e.target.value }));
+        div.querySelector('.link-desc-input').addEventListener('change', (e) => State.commitLinkHistory());
         div.querySelector('.link-badge-preset').addEventListener('change', (e) => {
             const preset = BADGE_PRESETS.find(b => b.value === e.target.value);
             const customInput = div.querySelector('.link-badge-custom');
@@ -159,8 +162,9 @@ const LinksManager = (() => {
             }
         });
         div.querySelector('.link-badge-custom').addEventListener('input', (e) => {
-            State.updateLink(link.id, { badge: e.target.value });
+            State.updateLinkSilent(link.id, { badge: e.target.value });
         });
+        div.querySelector('.link-badge-custom').addEventListener('change', () => State.commitLinkHistory());
         div.querySelector('.link-badge-color').addEventListener('input', (e) => State.updateLink(link.id, { badgeColor: e.target.value }));
         div.querySelector('.link-badge-font-color').addEventListener('input', (e) => State.updateLink(link.id, { badgeFontColor: e.target.value }));
 
@@ -173,6 +177,15 @@ const LinksManager = (() => {
             const chosen = ICON_PRESETS.find(p => p.icon === sel.value);
             const patch = { icon: sel.value };
             if (chosen) { patch.color = chosen.color; div.querySelector('.link-color-dot').value = chosen.color; }
+            // Update URL placeholder to hint Discord usage
+            const urlInput = div.querySelector('.link-url-input');
+            if (sel.value === 'fab fa-discord') {
+                urlInput.placeholder = 'Username do Discord (ex: usuario#1234)';
+                urlInput.type = 'text';
+            } else {
+                urlInput.placeholder = 'https://...';
+                urlInput.type = 'url';
+            }
             State.updateLink(link.id, patch);
         });
 
@@ -250,6 +263,7 @@ const LinksManager = (() => {
         });
 
         State.onChange((src) => {
+            // 'links-silent' = text field update; skip re-render to avoid interrupting typing
             if (['links','history','reset','init'].includes(src)) render();
         });
 
